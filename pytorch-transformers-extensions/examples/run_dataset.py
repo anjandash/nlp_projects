@@ -31,12 +31,11 @@ from torch.utils.data.distributed import DistributedSampler
 from tensorboardX import SummaryWriter
 from tqdm import tqdm, trange
 
-from pytorch_transformers import (WEIGHTS_NAME, BertConfig,
-                                  BertForSequenceClassification, BertTokenizer,
-                                  XLMConfig, XLMForSequenceClassification,
-                                  XLMTokenizer, XLNetConfig,
-                                  XLNetForSequenceClassification,
-                                  XLNetTokenizer)
+from pytorch_transformers import (WEIGHTS_NAME, 
+                                  RobertaConfig, RobertaForSequenceClassification, RobertaTokenizer,
+                                  BertConfig, BertForSequenceClassification, BertTokenizer,
+                                  XLMConfig, XLMForSequenceClassification, XLMTokenizer, 
+                                  XLNetConfig, XLNetForSequenceClassification, XLNetTokenizer)
 
 from pytorch_transformers import AdamW, WarmupLinearSchedule
 
@@ -45,12 +44,13 @@ from utils_dataset import (compute_metrics, convert_examples_to_features,
 
 logger = logging.getLogger(__name__)
 
-ALL_MODELS = sum((tuple(conf.pretrained_config_archive_map.keys()) for conf in (BertConfig, XLNetConfig, XLMConfig)), ())
+ALL_MODELS = sum((tuple(conf.pretrained_config_archive_map.keys()) for conf in (RobertaConfig, BertConfig, XLNetConfig, XLMConfig)), ())
 
 MODEL_CLASSES = {
-    'bert': (BertConfig, BertForSequenceClassification, BertTokenizer),
-    'xlnet': (XLNetConfig, XLNetForSequenceClassification, XLNetTokenizer),
-    'xlm': (XLMConfig, XLMForSequenceClassification, XLMTokenizer),
+    'roberta':  (RobertaConfig, RobertaForSequenceClassification, RobertaTokenizer),
+    'bert':     (BertConfig, BertForSequenceClassification, BertTokenizer),
+    'xlnet':    (XLNetConfig, XLNetForSequenceClassification, XLNetTokenizer),
+    'xlm':      (XLMConfig, XLMForSequenceClassification, XLMTokenizer),
 }
 
 
@@ -114,7 +114,7 @@ def train(args, train_dataset, model, tokenizer):
             batch = tuple(t.to(args.device) for t in batch)
             inputs = {'input_ids':      batch[0],
                       'attention_mask': batch[1],
-                      'token_type_ids': batch[2] if args.model_type in ['bert', 'xlnet'] else None,  # XLM don't use segment_ids
+                      'token_type_ids': batch[2] if args.model_type in ['bert', 'xlnet'] else None,  # Roberta, XLM don't use segment_ids
                       'labels':         batch[3]}
             ouputs = model(**inputs)
             loss = ouputs[0]  # model outputs are always tuple in pytorch-transformers (see doc)
@@ -204,7 +204,7 @@ def evaluate(args, model, tokenizer, prefix=""):
             with torch.no_grad():
                 inputs = {'input_ids':      batch[0],
                           'attention_mask': batch[1],
-                          'token_type_ids': batch[2] if args.model_type in ['bert', 'xlnet'] else None,  # XLM don't use segment_ids
+                          'token_type_ids': batch[2] if args.model_type in ['bert', 'xlnet'] else None,  # Roberta, XLM don't use segment_ids
                           'labels':         batch[3]}
                 outputs = model(**inputs)
                 tmp_eval_loss, logits = outputs[:2]
