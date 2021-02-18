@@ -23,6 +23,8 @@ import os
 import sys
 from io import open
 import enum
+import pandas as pd
+import textwrap
 
 from scipy.stats import pearsonr, spearmanr
 from sklearn.metrics import matthews_corrcoef, f1_score
@@ -130,6 +132,55 @@ class ImdbProcessor(DataProcessor):
                             InputExample(guid=guid, text_a=text_a, text_b=text_b, label=label))
         return examples
 
+class OperProcessor(DataProcessor):
+    """Processor for the OPER operator prediction data set ."""
+
+    def get_train_examples(self, data_dir):
+        """See base class."""
+        """logger.info("LOOKING AT {}".format(os.path.join(data_dir, "train.tsv")))"""
+        folder1 = os.path.join(data_dir)
+        return self._create_examples_from_folder([folder1], "train")
+
+    def get_test_examples(self, data_dir):
+        """See base class."""
+        folder1 = os.path.join(data_dir)
+        return self._create_examples_from_folder([folder1], "test")
+
+    def get_labels(self, data_dir):
+        """See base class."""
+        df = pd.read_csv(os.path.join(data_dir, "train.csv"), header=0)
+        return sorted(set(df.iloc[:, 2]))
+
+    """def get_label_from_name(self, name):
+        return label_dict[id]"""
+
+    def _create_examples_from_folder(self, folder_list, set_type):
+        """Creates examples for the training and dev sets from labelled folder."""
+        examples = []
+        for folder in folder_list:
+            #label_dir = os.path.basename(folder)
+
+            for input_file in os.listdir(folder):
+                if input_file.endswith(f"{set_type}.csv"):
+
+                    with open(os.path.join(folder, input_file), "r") as f:
+                        csvReader = csv.reader(f)
+                        header = next(csvReader)
+
+                        for i,row in enumerate(csvReader):
+                            text_a = row[4]
+                            text_a = text_a.replace('\n,', '\n')
+                            text_a = text_a.replace('\t', ' ')
+                            text_a = textwrap.dedent(text_a)
+                            
+
+                            guid = "%s-%d" % (set_type, i)
+                            text_b = None
+                            label = row[2] # TODO: Maybe change the label here based on a label_map?
+
+                            """logger.info("guid: %s, file: <%s>, text_a= <%s>, label=%s" % (guid, input_file, text_a, label))"""
+                            examples.append(InputExample(guid=guid, text_a=text_a, text_b=text_b, label=label))
+        return examples
 
 
 def convert_examples_to_features(examples, label_list, max_seq_length,
@@ -150,7 +201,7 @@ def convert_examples_to_features(examples, label_list, max_seq_length,
 
     features = []
     for (ex_index, example) in enumerate(examples):
-        if ex_index % 10000 == 0:
+        if ex_index % 1000 == 0:
             logger.info("Writing example %d of %d" % (ex_index, len(examples)))
 
         tokens_a = tokenizer.tokenize(example.text_a)
@@ -297,11 +348,13 @@ def compute_metrics(task_name, preds, labels):
 
 processors = {
     "imdb": ImdbProcessor,
+    "oper": OperProcessor,
 }
 
 output_modes = {
     "imdb": "classification",
     "quora": "classification",
+    "oper": "classification",
 }
 
 task_labels = {
