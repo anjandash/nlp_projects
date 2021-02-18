@@ -12,7 +12,7 @@ $ git clone https://github.com/anjandash/nlp_projects.git
 
 
 
-2. cd into the directory
+2. `cd` into the directory.
 
 ```
 $ cd nlp_projects
