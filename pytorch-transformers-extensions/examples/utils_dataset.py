@@ -343,6 +343,8 @@ def compute_metrics(task_name, preds, labels):
         return acc_and_f1(preds, labels)
     elif task_name == "quora":
         return acc_and_f1(preds, labels)
+    elif task_name == "oper": 
+        return acc_and_f1(preds, labels)
     else:
         raise KeyError(task_name)
 
