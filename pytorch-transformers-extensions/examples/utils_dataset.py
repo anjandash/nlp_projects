@@ -158,7 +158,6 @@ class OperProcessor(DataProcessor):
         """Creates examples for the training and dev sets from labelled folder."""
         examples = []
         for folder in folder_list:
-            #label_dir = os.path.basename(folder)
 
             for input_file in os.listdir(folder):
                 if input_file.endswith(f"{set_type}.csv"):
@@ -319,7 +318,7 @@ def simple_accuracy(preds, labels):
 
 def acc_and_f1(preds, labels):
     acc = simple_accuracy(preds, labels)
-    f1 = f1_score(y_true=labels, y_pred=preds)
+    f1 = f1_score(y_true=labels, y_pred=preds, average='micro')
     return {
         "acc": acc,
         "f1": f1,
